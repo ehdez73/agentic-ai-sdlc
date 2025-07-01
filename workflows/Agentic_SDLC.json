@@ -1,0 +1,974 @@
+{
+  "name": "Agentic SDLC",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1540,
+        580
+      ],
+      "id": "1ad08abd-5d64-4b6a-a239-efc0eef38b6e",
+      "name": "When chat message received",
+      "webhookId": "fbcbfa9b-1635-458a-be17-085cc093819e"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -1120,
+        800
+      ],
+      "id": "f76c7286-6e91-46af-b8da-85c2d0b9ab30",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "UlRmosQmzkwVRm3a",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.request }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an experienced software requirements analyst, familiar with Agile development ceremonies, specifically the \"3 amigos\" meeting (Developer, QA, Product Owner). Your task is to analyze a transcript of an informal conversation between these three roles, where they are discussing improvements and fixes to an existing software application.\n\nYour main objective is to identify and extract **functional requirements** from the conversation.\n\nHere are the key points to follow:\n\n1. **Focus:** Concentrate exclusively on discussions about **new functionalities** and **solutions to existing issues** in the application. Pay attention to the perspectives of each role (business/user needs, technical feasibility, and quality/test criteria).\n\n2. **Ignore noise:** Skip any personal conversation, jokes, digressions, or topics not directly related to software development.\n\n3. **Output format:** The output must be in plain text. Present each functional requirement using the format \"As a \\[User Role], I want to \\[action/functionality]\". If the user role is not explicitly stated, infer the most appropriate one based on the discussion (e.g., \"As a user, I want to...\", \"As an administrator, I want to...\", etc.).\n\n4. **Level of detail:** Requirements should be at a **medium level** of detail. Provide enough information to understand the functionality without going into technical specifications better suited for Gherkin scenarios. The idea is for them to serve as a clear basis for subsequent Gherkin definition.\n\n5. **Clear list:** Generate a numbered list of functional requirements in English.\n\n6. **Filename**: suggest a filename in kebab-case that describe all the requirements. The filename should not have any extension. For example \"discount-coupons-in-checkout\"\n\n**Example of how to identify and format a requirement:**\n\n* **Transcript:** \"The PO said: 'We need the user to be able to filter the results by date.' The Dev replied: 'Yes, that’s feasible,' and QA added: 'We’d have to test that date ranges work properly.'\"\n* **Requirement:** \"As a **user**, I want to be able to filter the results by date.\"\n\n",
+          "returnIntermediateSteps": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        -1100,
+        580
+      ],
+      "id": "1fec83a1-c7c3-46a6-ac9f-3a305edb0392",
+      "name": "Feature extractor",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.output }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "Act as a quality analyst who is highly experienced in behavioral driven development and developing well-constructed Gherkin Scenarios from supplied requirements. \n\nWhen I supply a list of functional requirements, I want you to create full coverage in the following way:\n\n1. Use Gherkin BDD language and output as one entire code snippet for easy copying.\n2. Provide positive and negative scenarios. \n3. Ensure all common steps you create are added as a Gherkin ‘Background’.\n4. Ensure ‘Background’ is provided only once and is placed after the user story and before the scenarios. \n5. Ensure all variables used are created as a Gherkin ‘Scenario Outline’.\n6. Ensure variables are added to a Gherkin ‘Examples’ table appropriately. \n7. Render example tables preserving alignment with spaces, follow these strict formatting rules:\n   - Use `|` to separate columns. \n   - Ensure column widths are calculated based on the longest content in each column, including the header.\n   - Align all cells to the left by default.\n   - Do not wrap text. Keep each row on a single line.\n   - Add a header row separator (a horizontal line after the header).\n   - Output only the table, without any extra explanation or text.\n8. Include feature level tags and scenario level tags e.g., @valid, @invalid, @feature-example. The tags must be placed before them.\n    For example: \n    ```\n     @valid\n     Scenario: Receive email notification on upgrade \n     ...\n\n     @invalid\n     Scenario: Receive email notification on downgrade\n     ...\n    ```\n9. Provide feature and user story.\n10. Afterwards, suggest an appropriate name for the *.feature file.\n11. Do not assume any output like error messages or variables not part of the requirements.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        -560,
+        580
+      ],
+      "id": "3d76c5a4-061e-4955-9861-aa2506662b52",
+      "name": "Gherkin Generator"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"filename\": \"cupones-de-descuento-en-checkout.md\",\n\t\"data\": \"1. As a **user**, I want to be able to enter a discount coupon code at the checkout so that I can apply it to my total order. 2. As a **user**, I want to receive a clear error message if my coupon is invalid, expired, or does not meet the minimum purchase requirements. 3. As a **user**, I want the discount to be automatically removed if my order total falls below the minimum purchase requirement for the coupon. 4. As a **user**, I want to see the discount applied in the order summary as a line item, showing how much was deducted. 5. As a **user**, I want my coupon to persist during my session, so I do not have to re-enter it every time I navigate between pages. 6. As a **user**, I want the option to remove an applied coupon easily, so I can try different coupons without hassle. 7. As a **admin**, I want to manage discount coupons in the admin panel, including creating new coupons and defining conditions such as percentage off and expiration dates.\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        -920,
+        800
+      ],
+      "id": "5a394c55-9da4-491c-933a-e6ab46b92cef",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "92a9a073-f70e-43ad-8679-aa5ccc61ed04",
+              "name": "request",
+              "value": "={{ $json.chatInput }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1340,
+        580
+      ],
+      "id": "d4007faa-5b9d-47fc-ae0c-022ef1b7ee1f",
+      "name": "Edit Chat Fields"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -560,
+        800
+      ],
+      "id": "de5860c8-2b9a-4e2e-829f-c51a427b18a5",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "UlRmosQmzkwVRm3a",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        80,
+        800
+      ],
+      "id": "9b947bed-6145-46e8-b0ca-e736b3754946",
+      "name": "OpenAI Chat Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "UlRmosQmzkwVRm3a",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Feature extractor",
+        "height": 440,
+        "width": 480
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1200,
+        500
+      ],
+      "typeVersion": 1,
+      "id": "37a7c19a-9702-42f0-b8a5-724a965f3d73",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Gherkin generator",
+        "height": 440,
+        "width": 560,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -620,
+        500
+      ],
+      "typeVersion": 1,
+      "id": "f3e15161-fa69-4fa8-bd58-f26d0c4e02a9",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## HTML Documentation generator",
+        "height": 440,
+        "width": 620,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        500
+      ],
+      "typeVersion": 1,
+      "id": "41a8dd93-6c4e-4bbf-bf02-ac67c9c87f88",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=# Functional Requirements\n{{ $('Feature extractor').item.json.output.data }}\n\n# Gherkin\n{{ $json.output.data }}\n",
+        "options": {
+          "systemMessage": "You are an HTML generator system. Your core function is to transform a list of functional requirements and Gherkin scenarios into a syntax-highlighted HTML.\n\nYour task is to generate two clearly separated sections in HTML:\n\n## Functional Requirements\n\n- Transform a plain list of functional requirements into a well-formatted HTML list.\n- Use nested bullet points or numbered lists where appropriate.\n- Do not modify or expand the original requirements.\n\n## Gherkin Scenarios \n\nGherkin to HTML Conversion & Syntax Highlighting:\n\n- Code Block Formatting: The entire Gherkin scenario must be presented within an HTML <code> or <pre> block to preserve formatting and provide a code-like appearance within the email body.\n- Syntax Highlighting: Apply inline CSS styling to highlight Gherkin keywords and elements using distinct colors.\n- Keywords (Feature:, Scenario:, Scenario Outline:, Background:, Given, When, Then, And, But, Examples:): Use a specific color (e.g., blue or purple).\n- Tags (@tag): Use a specific color (e.g., orange or cyan).\n- Comments (# comment): Use a specific color (e.g., green or grey).\n- Strings/Literals (e.g., quoted text): Use a specific color (e.g., red or brown).\n- Variables (<variable> in Scenario Outline): Use a specific color (e.g., magenta or teal).\n- Plain Text Tables: When Examples: tables are present within a Gherkin scenario, they must not be converted to HTML tables. Instead, render them using plain text formatting, preserving their column-aligned structure within the <code> or <pre> block. Use spaces to ensure columns align.\n- Strict Adherence: You must only convert the provided Gherkin content. Do not add any new information, introductions, conclusions, or stylistic elements not directly derived from the Gherkin text itself, beyond the syntax highlighting and code block encapsulation.\n- Constraint: Your output must be a direct HTML representation of the Gherkin input, formatted as a code block with syntax highlighting for keywords, tags, comments, and variables, and with Examples tables rendered in plain text, ready for email transmission. Do not generate conversational text or ask clarifying questions unless the input is entirely ambiguous regarding the recipient or content.\n\n\n### Additional Instructions:\n\n- The output must be a valid HTML content only.\n- Do not include any explanatory text or headings beyond the two defined sections.\n\nConstraint: Do not introduce or omit any content. Only format and highlight the provided text as specified.\n\n### Output example:\n<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>Functional Requirements and Gherkin Scenarios</title><style>.keyword{ color: blue;} .tag{ color: orange;} .comment{ color: green;} .string{ color: red;} .variable{ color: magenta;} pre{ font-family: monospace; white-space: pre-wrap;} </style></head><body><h2>Functional Requirements</h2><ul><li>As a user, I want to enter a coupon code at the checkout page so that I can apply discounts to my order total.</li><li>As a user, I want to see a clear message if a coupon code is invalid, expired, or does not meet purchase conditions, so that I understand why the coupon cannot be applied.</li></ul><h2>Gherkin Scenarios</h2><pre><code>@feature-discount-coupons<span class=\"keyword\">Feature:</span>Discount Coupons in Checkout As a user, I want to enter a coupon code at the checkout page so that I can apply discounts to my order total. <span class=\"keyword\">Background:</span><span class=\"keyword\">Given</span>I am on the checkout page <span class=\"keyword\">And</span>I have a cart with products <span class=\"tag\">@valid</span><span class=\"keyword\">Scenario:</span>Removing a valid coupon code <span class=\"keyword\">Given</span>I have applied the coupon code \"<span class=\"string\">VALIDCOUPON1</span>\" <span class=\"keyword\">When</span>I remove the coupon code <span class=\"keyword\">Then</span>I should see the original amount returned as \"<span class=\"string\">100</span>\" <span class=\"keyword\">And</span>I should see a message \"<span class=\"string\">Coupon removed</span>\"</code></pre></body></html>"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        40,
+        580
+      ],
+      "id": "74a61c7d-f828-41a7-a105-d5bfe97591d3",
+      "name": "HTML Documentation"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        60,
+        1280
+      ],
+      "id": "fa3cfdf4-87d7-48d2-8a75-43c9766b6621",
+      "name": "OpenAI Chat Model3",
+      "credentials": {
+        "openAiApi": {
+          "id": "UlRmosQmzkwVRm3a",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## PlainText Documentation generator",
+        "height": 580,
+        "width": 620,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        980
+      ],
+      "typeVersion": 1,
+      "id": "15664e86-8d54-43d9-a47f-840d83b2e175",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=# Functional Requirements\n{{ $('Feature extractor').item.json.output.data }}\n\n# Gherkin\n{{ $json.output.data }}\n\n",
+        "options": {
+          "systemMessage": "You are a plain text generator system. Your core function is to transform a list of functional requirements and Gherkin scenarios into a wel formatted plain text.\n\nYour task is to generate two clearly separated sections :\n\n## Functional Requirements\n\n- Transform a plain list of functional requirements into a well-formatted list.\n- Use nested bullet points or numbered lists where appropriate.\n- Do not modify or expand the original requirements.\n\n## Gherkin Scenarios \n\nGherkin to PlainText Conversion:\n\n- Plain Text Tables: When Examples: tables are present within a Gherkin scenario, render them using plain text formatting, preserving their column-aligned structure using spaces to ensure columns align.\n- Strict Adherence: You must only convert the provided Gherkin content. Do not add any new information, introductions, conclusions, or stylistic elements not directly derived from the Gherkin text itself, beyond the syntax highlighting and code block encapsulation.\n- Constraint: Your output must be a direct plain text representation of the Gherkin input. Do not generate conversational text or ask clarifying questions unless the input is entirely ambiguous regarding the recipient or content.\n\n\n### Additional Instructions:\n\n- Do not include any explanatory text or headings beyond the two defined sections.\n\nConstraint: Do not introduce or omit any content. Only format and highlight the provided text as specified.\n\n### Output example:\n## Functional Requirements\n\nAs a user, I want to enter a coupon code at the checkout page so that I can apply discounts to my order total.\nAs a user, I want to see a clear message if a coupon code is invalid, expired, or does not meet purchase conditions, so that I understand why the coupon cannot be applied.\nAs a user, I want the discount applied by a valid coupon to be reflected in my order summary as a line item, so that I can see the amount of discount applied.\nAs a user, I want the system to automatically remove the discount if my cart total falls below the minimum requirement after changes, so that I am informed about the adjustment.\n\n\n## Gherkin Scenarios\n\n@feature-discount-coupons\nFeature: Discount Coupons in Checkout\n\n  As a user,\n  I want to enter a coupon code at the checkout page\n  so that I can apply discounts to my order total.\n\n  Background:\n    Given I am on the checkout page\n    And I have a cart with products\n\n  @valid\n  Scenario Outline: Applying a valid coupon code\n    When I enter the coupon code \"coupon_code\"\n    Then I should see a message \"Coupon applied\"\n    And the discount of \"discount_amount\" should be reflected in the order summary\n    And the original total should be adjusted to \"adjusted_total\"\n\n    Examples:\n    | coupon_code   | discount_amount | adjusted_total  |\n    | VALIDCOUPON1  | 10              | 90              |\n    | VALIDCOUPON2  | 15              | 85              |\n\n  @valid\n  Scenario: Removing a valid coupon code\n    Given I have applied the coupon code \"VALIDCOUPON1\"\n    When I remove the coupon code\n    Then I should see the original amount returned as \"100\"\n    And I should see a message \"Coupon removed\"\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        40,
+        1060
+      ],
+      "id": "32a31066-59ff-4678-9568-b0ba43e578c2",
+      "name": "PlainText Documentation"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"filename\": \"cupones-de-descuento-en-checkout.feature\",\n\t\"data\": \"Feature: Discount Coupons In Checkout.\\n.....\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        -380,
+        800
+      ],
+      "id": "71b90b65-44f7-42ce-887d-1d57e80b3c31",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        700,
+        1280
+      ],
+      "id": "2746ecb8-e8bd-4caf-8e30-2c07186c5a5d",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "UlRmosQmzkwVRm3a",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.output }}",
+        "options": {
+          "systemMessage": "You are a mail assistant. Use the provided tools to send the provided content via email "
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        760,
+        580
+      ],
+      "id": "b06ec06d-4708-4f44-9952-af15e62c2a86",
+      "name": "Mail Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        760,
+        720
+      ],
+      "id": "a84c8794-5ec9-4a33-a27f-f6e0ee8b3c49",
+      "name": "OpenAI Chat Model4",
+      "credentials": {
+        "openAiApi": {
+          "id": "UlRmosQmzkwVRm3a",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "ernesto.hernandez@wizeline.com",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        1040,
+        720
+      ],
+      "id": "8b746f0f-db96-4780-b4a5-a77690d77a63",
+      "name": "Gmail",
+      "webhookId": "ca071f3a-6149-4747-ba16-e2b220afaa76",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "nz5ZowYCPE2MSTU7",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "createFromText",
+        "content": "={{ $json.output }}",
+        "name": "={{ $('Feature extractor').item.json.output.filename }}.txt",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1o0zP014X5d7YZkJOnmxD05I3jqfX0xoL",
+          "mode": "list",
+          "cachedResultName": "generated-plain-text",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1o0zP014X5d7YZkJOnmxD05I3jqfX0xoL"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        400,
+        1260
+      ],
+      "id": "c845db7d-98b1-47d2-a098-d5bdd3bdadb0",
+      "name": "n8n-demo",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "BB6PWrlrvO5LQcCA",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Mail Sender",
+        "height": 440,
+        "width": 620,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        660,
+        500
+      ],
+      "typeVersion": 1,
+      "id": "72d7f1de-fbcc-4daa-8aa9-c34f5cd5d0a9",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "jsonMode": "expressionData",
+        "jsonData": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1,
+      "position": [
+        880,
+        1260
+      ],
+      "id": "c0f2d867-5e6d-481f-b17b-77d0c06c8004",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "chunkSize": 5000,
+        "chunkOverlap": 100,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        900,
+        1420
+      ],
+      "id": "c4e44895-1cd8-4472-9367-07cc5c4203fd",
+      "name": "Recursive Character Text Splitter"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": "embeddings",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.2,
+      "position": [
+        760,
+        1060
+      ],
+      "id": "8f47e3e3-4e11-4d91-bd5b-4086ae5a7006",
+      "name": "Postgres PGVector Store",
+      "credentials": {
+        "postgres": {
+          "id": "o70hFfx7cowEXBtM",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Knowdlege base",
+        "height": 580,
+        "width": 620,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        660,
+        980
+      ],
+      "typeVersion": 1,
+      "id": "21cbc959-8aec-464b-919b-46e6a80c7149",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        280
+      ],
+      "id": "e723b546-698a-4014-8d42-4676ab9c43a7",
+      "name": "OpenAI Chat Model5",
+      "credentials": {
+        "openAiApi": {
+          "id": "UlRmosQmzkwVRm3a",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Test code generator",
+        "height": 440,
+        "width": 900,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "7d9fb25e-1b7a-4efa-a263-16d3e1a04288",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=# Gherkin\n{{ $json.output.data }}\n",
+        "options": {
+          "systemMessage": "You are an expert Java code generator specializing in automated testing using Cucumber-JVM and Selenium.\n\nGiven one or more scenarios written in Gherkin, generate the complete test skeletons using best automation practices, including:\n\n- Automatically choose between **Page Object Pattern**, **Screenplay Pattern**, or **Data Driven Testing**, depending on what best suits the scenario.\n- Use **Java** as the programming language.\n- Organize the generated code into a standard folder structure with separate files:\n  - `src/test/java/stepdefinitions`\n  - `src/test/java/pageobjects`\n  - `src/test/java/hooks`\n  - `src/test/java/utils`\n- Generate:\n  - All necessary **Step Definitions** classes, including base logic (e.g., calling Page Object methods).\n  - **Page Object** or **Screenplay** classes (like `Actor`, `Tasks`, `Actions`, `Questions`) as needed.\n  - A configuration class with `@Before` and `@After` hooks to initialize and quit the Selenium WebDriver.\n  - Optionally, `.feature` files (if not already provided).\n  - Utility classes to support **Data Driven Testing** when the scenario uses `Examples` or `DataTable`.\n- Use Selenium WebDriver for UI interactions.\n- Assume Cucumber 7+ with Java 11 or newer.\n- Include comments (TODOs or hints) for developers where further implementation is needed.\n\nInput:\n- A list of Gherkin scenarios.\n\nExpected output:\n- Java source code organized in a proper project structure.\n- Code only. No additional explanations or descriptions.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        40,
+        80
+      ],
+      "id": "ba3320d5-d284-4ec5-8f5f-d673b3bb65c9",
+      "name": "Test generator"
+    },
+    {
+      "parameters": {
+        "operation": "toText",
+        "sourceProperty": "output",
+        "options": {
+          "encoding": "utf8"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        380,
+        80
+      ],
+      "id": "562c70ac-1a89-4d12-aef2-2cca1045c6fe",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "name": "={{ $('Feature extractor').item.json.output.filename }}.test",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1vXzDuxtKkxBwKlcWX1pEAE_Xw_qnUI30",
+          "mode": "list",
+          "cachedResultName": "generated-test",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1vXzDuxtKkxBwKlcWX1pEAE_Xw_qnUI30"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        600,
+        80
+      ],
+      "id": "db0fb36c-992f-4b9e-ac65-d4f0299da4af",
+      "name": "generated-test",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "BB6PWrlrvO5LQcCA",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        1900
+      ],
+      "id": "f73b9a6c-b6b4-45a5-8311-02b39712b8eb",
+      "name": "OpenAI Chat Model6",
+      "credentials": {
+        "openAiApi": {
+          "id": "UlRmosQmzkwVRm3a",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Technical Documentation generator",
+        "height": 580,
+        "width": 620,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        1600
+      ],
+      "typeVersion": 1,
+      "id": "882af8ea-e1d4-4c5b-bfeb-be1d9c44bc9d",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "operation": "createFromText",
+        "content": "={{ $json.output }}",
+        "name": "={{ $('Feature extractor').item.json.output.filename }}.md",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "18rpAWuBpn2NXVR6cpsT7NG202CswgZo6",
+          "mode": "list",
+          "cachedResultName": "generated-docs",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/18rpAWuBpn2NXVR6cpsT7NG202CswgZo6"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        400,
+        1880
+      ],
+      "id": "3c9f1e56-9ce2-4ff2-98a6-8a08cd1f5fcb",
+      "name": "n8n-demo1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "BB6PWrlrvO5LQcCA",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=# Functional Requirements\n{{ $('Feature extractor').item.json.output.data }}\n\n# Gherkin\n{{ $json.output.data }}\n\n",
+        "options": {
+          "systemMessage": "You are a technical writer generating developer-oriented documentation in Markdown format.\n\nYou are given two inputs:\n1. A list of functional requirements\n2. A set of Gherkin scenarios\n\nYour task is to consolidate this information into a single, structured Markdown document with the following sections:\n\n## Output Format\n\nGenerate the following sections:\n\n### 1. Overview\nSummarize the feature’s purpose based on the functional requirements.\n\n### 2. Functional Requirements\nFor each functional requirement:\n- Start writing the functional requirement in its original format. Example \"As a **user**, I want to be assigned a category (PLATINUM, GOLD, SILVER, BRONZE) based on the number of completed orders in the last year\" \n- Then add a brief explanation, restate it in your own words to clarify its purpose.\n- Explain its impact on the system.\n- If helpful, provide a brief real-world example (e.g., “For example, if a user completes 12 orders in a year, they may be upgraded to GOLD.”).\n- Use bullet points only to enumerate the original requirements before or after the explanations.\n\n### 3. Behavior Summary\nExtract key business logic or behavioral rules implied by the requirements and Gherkin scenarios. Present them in concise, developer-friendly bullet points.\n\n### 4. Categorization Rules\nPresent a table (if applicable) or bullet list describing:\n- How user categories are determined (based on order counts, etc.)\n- The logic for upgrading/downgrading\n- Any null/default behavior\n\n### 5. Notification Triggers\nList conditions under which email notifications are sent. Separate cases for upgrade, downgrade, or no action.\n\n### 6. Gherkin Scenario Mapping\nFor each Gherkin scenario:\n- Give a short descriptive title\n- Indicate whether it’s a **positive**, **negative**, or **edge** case\n- Summarize its purpose and behavior in natural language\n- Include any examples or parameters if defined\n\n### 7. Asynchronous Process Notes\nSummarize the asynchronous aspects described in requirements or scenarios. Explain their relevance to development (e.g., background jobs, eventual consistency, etc.).\n\n### 8. Additional Notes\nInclude inferred technical considerations, assumptions, or integration hints relevant for developers.\n\n## Style & Rules:\n- Use Markdown formatting (headings, bold, tables, etc.).\n- Write with clarity and precision, as if the audience is a software engineer unfamiliar with the feature.\n- Only use logic and behavior directly supported by the input — do not invent requir\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        40,
+        1680
+      ],
+      "id": "788d8f7b-0176-4105-83f9-8c31209970c7",
+      "name": "Technical Documentation"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Edit Chat Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Feature extractor",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Feature extractor": {
+      "main": [
+        [
+          {
+            "node": "Gherkin Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gherkin Generator": {
+      "main": [
+        [
+          {
+            "node": "HTML Documentation",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "PlainText Documentation",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Test generator",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Technical Documentation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Feature extractor",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Chat Fields": {
+      "main": [
+        [
+          {
+            "node": "Feature extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Gherkin Generator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "HTML Documentation",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML Documentation": {
+      "main": [
+        [
+          {
+            "node": "Mail Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "PlainText Documentation",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PlainText Documentation": {
+      "main": [
+        [
+          {
+            "node": "Postgres PGVector Store",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "n8n-demo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Gherkin Generator",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Postgres PGVector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Mail Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "Mail Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Postgres PGVector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model5": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Test generator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Test generator": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "generated-test",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model6": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Technical Documentation",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Technical Documentation": {
+      "main": [
+        [
+          {
+            "node": "n8n-demo1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "341726e1-f45a-42aa-af69-2dc2b4c03168",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e8e13ca28292496bb6e988e5705c642203affe74cda520b04aa7144af8b1cf34"
+  },
+  "id": "vB6vHFsb4O3naY87",
+  "tags": []
+}

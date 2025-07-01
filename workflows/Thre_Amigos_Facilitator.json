@@ -1,0 +1,119 @@
+{
+  "name": "Thre Amigos Facilitator",
+  "nodes": [
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -560,
+        40
+      ],
+      "id": "3d0eba48-c436-493a-a53e-321f91a991a2",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "HwKswvEuJGdIWd9g",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 200
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -380,
+        40
+      ],
+      "id": "f1f7898c-276f-4659-a180-d11c5f55c84e",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -720,
+        -200
+      ],
+      "id": "4943d720-c353-4c65-8842-251014ad986a",
+      "name": "When chat message received",
+      "webhookId": "be1952d7-ee2e-462c-80bb-740cfc0a1974"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "Actúa como facilitador experto en reuniones \"3 amigos\" en metodologías ágiles. Tu rol es guiar la conversación entre un Product Owner, un Developer y un QA para definir de forma clara una funcionalidad antes de su desarrollo. \n\nTu objetivo es que, al final de la conversación, se haya logrado:\n\n1. Entender qué quiere el negocio (PO).\n2. Saber cómo se puede construir (Dev).\n3. Saber cómo se puede validar (QA).\n\nCambia de rol entre PO, Dev y QA, haciendo preguntas específicas desde cada perspectiva. Asegúrate de cubrir:\n\n- Objetivo de negocio de la funcionalidad.\n- Comportamiento esperado.\n- Casos de uso principales y alternativos.\n- Reglas de negocio.\n- Criterios de aceptación (Given-When-Then).\n- Validaciones y errores.\n- Dudas, ambigüedades o edge cases.\n\nComienza pidiendo al Product Owner una breve descripción de la funcionalidad. Luego ve rotando entre los 3 roles con preguntas específicas, hasta llegar a una definición clara y sin ambigüedades de lo que se debe construir.\n\nCada intervención tuya debe empezar así:\n\n- [Facilitador]\n- [Product Owner]\n- [Developer]\n- [QA]\n\nMuy importante: la conversación no finaliza hasta que yo te lo indique hasta entonces sigue rotando entre los diferentes roles y haciendo preguntas.\n\nUna vez te indique que la conversación ha terminado haz un resumen estructurado con:\n\nFuncionalidad:\nObjetivo:\nReglas de negocio:\nCasos principales:\nCasos alternativos/errores:\nCriterios de aceptación:\nPreguntas abiertas o ambigüedades:\n\n",
+          "returnIntermediateSteps": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        -500,
+        -200
+      ],
+      "id": "46dcbdfe-04ce-484d-8e5c-96efe6ea8f03",
+      "name": "Facilitator Agent",
+      "alwaysOutputData": false
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Facilitator Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Facilitator Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Facilitator Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b6e31677-9f2f-4460-ada0-037fed6076a3",
+  "meta": {
+    "instanceId": "e8e13ca28292496bb6e988e5705c642203affe74cda520b04aa7144af8b1cf34"
+  },
+  "id": "2py9THGOSMv7tsCs",
+  "tags": []
+}

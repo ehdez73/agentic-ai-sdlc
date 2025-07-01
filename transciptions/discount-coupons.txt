@@ -1,0 +1,132 @@
+
+Chat
+hello
+
+[Facilitator] Hello! Thank you for joining the "3 Amigos" meeting today. The current date and time is 2025-06-27T14:36:50.779+02:00. To begin, could I ask the Product Owner to provide a brief description of the functionality we will be discussing?
+I want to be able to apply discount coupons during the checkout before I pay my shopping cart
+
+[Facilitator] Thank you for that description. Let's start by elaborating on the business objective and the value this functionality provides.
+
+[Product Owner] Could you clarify how you expect this discount coupon feature to enhance the user's shopping experience? What specific value does it deliver to our customers?
+
+I want to create a marketing campaing so the users can use those coupons to improve the sales
+
+[Facilitator] Excellent! So, the intention behind implementing the discount coupons is to drive sales through a marketing campaign by incentivizing customers to complete their purchases.
+Now, let's move on to the Developer's perspective.
+
+[Developer] From a technical standpoint, could you describe how you envision the coupon application process within the checkout flow? What specific actions should a user take to apply a coupon code, and what happens in the system when they do?
+In the checkout process, the user can introduce a coupon code so a discount is applied to the total amount of the cart
+
+[Facilitator] Thank you for that explanation. So, the user will have the option to enter a coupon code in the checkout process, and upon submission, the discount should be reflected in the total amount of their shopping cart.
+Now, let's delve deeper into the functionality by identifying the expected functional behavior.
+
+[QA] To ensure that we cover all necessary aspects of this functionality, can we outline the main use cases? For example, what should happen if a valid coupon is applied? What should happen if an invalid coupon is entered?
+when a valid coupon is applied, a predefined percentage of discount is applied. If the coupon is not valid, then an error message is shown and the coupon is not applied
+
+[Facilitator] Great, we have a clear understanding of how valid and invalid coupons should behave in the checkout process.
+Next, let's discuss business rules and constraints that might affect this functionality.
+
+[Product Owner] Are there any specific business rules we need to consider regarding the discount coupons? For example, are there expiration dates for coupons, limitations on usage, or specific conditions that must be met for a coupon to be valid?
+a coupon has an expiration date and only can be applied once per user
+
+[Facilitator] Thank you for that clarification. So, we have two important business rules to keep in mind:
+Each coupon has an expiration date.
+Each coupon can only be used once per user.
+Now, let's define the acceptance criteria for this functionality using the Given-When-Then format.
+
+[QA] Can you provide the acceptance criteria based on the criteria we've discussed? For example, what should be true in the system "Given" certain conditions, "When" specific actions are taken, and "Then" what outcomes should occur?
+please, suggest some acceptance criteria
+
+[Facilitator] Certainly! Here are some suggested acceptance criteria in the Given-When-Then format for the discount coupon functionality:
+Given the user is on the checkout page, when the user enters a valid coupon code and clicks "Apply", then the discount is applied to the total amount of the cart.
+
+Given the user is on the checkout page, when the user enters an invalid coupon code and clicks "Apply", then an error message is displayed indicating that the coupon is not valid.
+
+Given the user has successfully applied a coupon, when they try to apply the same coupon again, then an error message is displayed indicating that the coupon has already been used.
+
+Given the user is on the checkout page with a valid, unexpired coupon, when the user enters the coupon code and proceeds to payment, then the discount amount should be reflected in the transaction summary.
+
+Given the user is on the checkout page, when the user enters a coupon code that has expired, then an error message is displayed indicating that the coupon has expired.
+
+Would you like to refine or add any additional acceptance criteria based on these suggestions?
+
+these are ok
+
+[Facilitator] Great! We have established clear acceptance criteria for the discount coupon functionality.
+Now, let's consider validations, errors, and exception handling.
+
+[QA] What specific validations should be in place to ensure the coupon is correctly processed? For instance, how should the system handle the scenario of a coupon code being entered incorrectly? What kind of error messages should the user receive?
+A pop up window should appear showing that the coupon is not valid
+
+[Facilitator] Thank you for that response. So, in the event that a coupon code is entered incorrectly, a pop-up window will display a message indicating that the coupon is not valid.
+Next, we should also consider edge cases or any assumptions that we need to keep in mind before finalizing the discussion.
+
+[Developer] Are there any potential edge cases we should address? For instance, what should happen if there is an unexpected system error during the coupon application process? Or are there any assumptions we've made that need further clarification?
+If any error appears, just ignore the coupon.
+
+[Facilitator] Understood. So, if any error occurs during the coupon application process, the system should simply ignore the coupon, and no discount should be applied to the cart.
+To summarize our discussion, let's review what we have covered:
+
+Functionality:
+Ability for users to apply discount coupons during checkout before payment.
+
+Business Objective:
+To enhance user experience and drive sales through a marketing campaign where customers can use discount coupons.
+
+Business Rules:
+
+Coupons have an expiration date.
+Coupons can only be applied once per user.
+Main Cases:
+
+Applying a valid coupon applies a discount.
+Entering an invalid coupon shows an error message.
+Alternative/Error Cases:
+
+Attempting to use an already-used coupon shows an error.
+Entering an expired coupon shows an error.
+If a system error occurs, the coupon is ignored, and no discount is applied.
+Acceptance Criteria:
+
+Given the user is on the checkout page, when the user enters a valid coupon code and clicks "Apply", then the discount is applied to the total amount of the cart.
+Given the user is on the checkout page, when the user enters an invalid coupon code and clicks "Apply", then an error message is displayed indicating that the coupon is not valid.
+Given the user has successfully applied a coupon, when they try to apply the same coupon again, then an error message is displayed indicating that the coupon has already been used.
+Given the user is on the checkout page with a valid, unexpired coupon, when the user enters the coupon code and proceeds to payment, then the discount amount should be reflected in the transaction summary.
+Given the user is on the checkout page, when the user enters a coupon code that has expired, then an error message is displayed indicating that the coupon has expired.
+Open Questions or Identified Ambiguities:
+
+None identified at this moment.
+If there are no other questions or comments, we can consider this functionality fully defined. Would you like to add or modify anything before we conclude?
+
+no, it's ok
+
+[Facilitator] Thank you for your participation today. To conclude, here is the formatted summary of our conversation:
+**Functionality:**  
+Ability for users to apply discount coupons during checkout before payment.
+
+**Business Objective:**  
+To enhance user experience and drive sales through a marketing campaign where customers can use discount coupons.
+
+**Business Rules:**  
+- Coupons have an expiration date.
+- Coupons can only be applied once per user.
+
+**Main Cases:**  
+- Applying a valid coupon applies a discount.
+- Entering an invalid coupon shows an error message.
+
+**Alternative/Error Cases:**  
+- Attempting to use an already-used coupon shows an error.
+- Entering an expired coupon shows an error.
+- If a system error occurs, the coupon is ignored, and no discount is applied.
+
+**Acceptance Criteria:**  
+1. **Given** the user is on the checkout page, **when** the user enters a valid coupon code and clicks "Apply", **then** the discount is applied to the total amount of the cart.
+2. **Given** the user is on the checkout page, **when** the user enters an invalid coupon code and clicks "Apply", **then** an error message is displayed indicating that the coupon is not valid.
+3. **Given** the user has successfully applied a coupon, **when** they try to apply the same coupon again, **then** an error message is displayed indicating that the coupon has already been used.
+4. **Given** the user is on the checkout page with a valid, unexpired coupon, **when** the user enters the coupon code and proceeds to payment, **then** the discount amount should be reflected in the transaction summary.
+5. **Given** the user is on the checkout page, **when** the user enters a coupon code that has expired, **then** an error message is displayed indicating that the coupon has expired.
+
+**Open Questions or Identified Ambiguities:**  
+- None identified at this moment.
+Thank you once again for your time. If you have any further questions in the future, feel free to reach out. Have a great day!

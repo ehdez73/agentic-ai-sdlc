@@ -1,0 +1,435 @@
+{
+  "name": "Gherkin Validator",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -480,
+        -240
+      ],
+      "id": "4c9260b6-310a-41c7-8560-1d0994aba2fb",
+      "name": "When chat message received",
+      "webhookId": "d554fef1-4dbb-4ba5-82f1-5e72af504cab"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -40,
+        0
+      ],
+      "id": "af82cb89-fb3d-4e1a-8e05-b01b01376e95",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "UlRmosQmzkwVRm3a",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.valid }}",
+                    "rightValue": "=\"false\"",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    },
+                    "id": "851be855-6190-4224-8968-bde7662fe99d"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "valid"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "f4dbc58f-6870-464c-b45c-3f02b7079d8c",
+                    "leftValue": "={{ ! $json.output.valid && $('Retries').item.json.count >= $('Retries').item.json.max_retries}}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "max_retries"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c14d31c8-3772-4223-98ad-3ea9a0ceb128",
+                    "leftValue": "={{ ! $json.output.valid && $('Retries').item.json.count < $('Retries').item.json.max_retries}}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "invalid"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        520,
+        -20
+      ],
+      "id": "d4dc49ba-7532-44bc-87b0-4eb6e6a55e9d",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.output }}",
+        "options": {
+          "systemMessage": "You are an expert Gherkin specification validator and BDD specialist. Your primary goal is to **strictly validate** the provided Gherkin feature file content.\n\n---\n\n### Validation Instructions:\n\nYour task is to meticulously review the provided Gherkin feature file content against best practices and syntactical correctness.\n\n**Output Format:**\n\n* **If the Gherkin content is completely valid and adheres to ALL specified criteria, you MUST output ONLY the word `valid`.**\n* **If ANY issues are found, you MUST output ONLY the words `invalid issues` followed by a concise, bulleted list of all identified issues.** Each issue should clearly state the problem and how it can be fixed.\n\n---\n\n### Focus Areas for Validation:\n\nPay extremely close attention to the following aspects when identifying issues:\n\n1.  **Overall Gherkin Syntax:**\n    * Are all Gherkin keywords (e.g., `Feature`, `Scenario`, `Scenario Outline`, `Given`, `When`, `Then`, `And`, `But`, `Background`, `Examples`) spelled correctly and consistently?\n    * Are there any obvious syntax errors (e.g., missing colons after keywords, incorrect indentation, unexpected characters)?\n\n2.  **Feature Section:**\n    * Does the `Feature:` keyword have a clear, concise, and descriptive title?\n    * Is there an appropriate, high-level business capability description immediately following the feature title?\n\n3.  **Background Section (if present):**\n    * Is the `Background:` keyword correctly used?\n    * Do the steps within the `Background` genuinely set up a common context that applies to *all* scenarios in the feature file?\n\n4.  **Scenario Sections (both `Scenario:` and `Scenario Outline:`):**\n    * Does each `Scenario:` or `Scenario Outline:` have a clear, descriptive, and unique title?\n    * Are the `Given`, `When`, and `Then` steps logically ordered and representative of a single, testable behavior?\n    * Are the steps concise, unambiguous, and written from a user's perspective?\n    * Are `And` and `But` keywords used appropriately to extend a preceding `Given`, `When`, or `Then` step, rather than starting new conceptual steps?\n\n5.  **Scenario Outline Specific Validation:**\n    * Is the `Scenario Outline:` keyword used correctly?\n    * Are all placeholders within the `Given`, `When`, or `Then` steps correctly defined using angle brackets (e.g., `<placeholder_name>`)?\n    * Does every `Scenario Outline` have an `Examples:` table directly associated with it and placed immediately after its steps?\n    * Does the `Examples:` keyword precede the table?\n    * Are the table headers (first row) correctly enclosed in `|` delimiters, and do they **exactly** match (case-sensitive) all placeholders defined in the `Scenario Outline` steps?\n    * Are all subsequent data rows also correctly enclosed in `|` delimiters?\n    * Does each data row provide a value for every header defined in the `Examples` table?\n    * Are there any missing or extra columns in the data rows compared to the header row?\n\n6.  **Readability and Best Practices:**\n    * Is the overall language clear, concise, business-readable, and free of technical jargon where not necessary?\n    * Does the Gherkin convey the intent of the feature and scenarios effectively to both technical and non-technical stakeholders?\n\n---"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        180,
+        0
+      ],
+      "id": "c025acfd-7e6b-4e2e-9ec7-4f7baa5e8023",
+      "name": "Gherkin Validator"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "Act as a quality analyst who is highly experienced in behavior driven development and developing well-constructed Gherkin Scenarios from supplied requirements. \n\nWhen I supply a list of functional requirements or an existing Gherkin, I want you to create full coverage in the following way:\n\n1. Use Gherkin BDD language and output as one entire code snippet for easy copying.\n2. Provide positive and negative scenarios. \n3. Ensure all common steps you create are added as a Gherkin ‘Background’.\n4. Ensure ‘Background’ is provided only once and is placed after the user story and before the scenarios. \n5. Ensure all variables used are created as a Gherkin ‘Scenario Outline’.\n6. Ensure variables are added to a Gherkin ‘Examples’ table appropriately. \n7. Render example tables preserving alignment with spaces, follow these strict formatting rules:\n   - Use `|` to separate columns. \n   - Ensure column widths are calculated based on the longest content in each column, including the header.\n   - Align all cells to the left by default.\n   - Do not wrap text. Keep each row on a single line.\n   - Add a header row separator (a horizontal line after the header).\n   - Output only the table, without any extra explanation or text.\n8. Include feature level tags and scenario level tags e.g., @valid, @invalid, @feature-example. The tags must be placed before them.\n    For example: \n    ```\n     @valid\n     Scenario: Receive email notification on upgrade \n     ...\n\n     @invalid\n     Scenario: Receive email notification on downgrade\n     ...\n    ```\n9. Provide feature and user story.\n10. Afterwards, suggest an appropriate name for the *.feature file.\n11. Do not assume any output like error messages or variables not part of the requirements.\n\n\nIf I supply a Gherkin specification with some issues, try to solve those issues."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        180,
+        -240
+      ],
+      "id": "af8f17ba-33ca-4793-b346-fc7c57adfce4",
+      "name": "Gherkin Generator"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ddba4115-9e43-4460-9a1d-c59f934893c6",
+              "name": "count",
+              "value": "={{ $json.count + 1 }}",
+              "type": "number"
+            },
+            {
+              "id": "ee595baa-0e4f-46cb-8b94-02a9bc43d906",
+              "name": "max_retries",
+              "value": "2",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -40,
+        -240
+      ],
+      "id": "a51283d8-f268-453f-9b97-23e40172919d",
+      "name": "Retries"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5fa5efdb-fc28-4379-8d56-4141d01a88bb",
+              "name": "count",
+              "value": "={{ $('Retries').item.json.count }}",
+              "type": "number"
+            },
+            {
+              "id": "f39a15ef-6a5e-45b6-8b4b-f2f677636c74",
+              "name": "chatInput",
+              "value": "=# Given the following functional requirements\n{{ $('Init').item.json.requirements }}\n\n# Given this Gherkin:\n{{ $('Gherkin Generator').item.json.output }}\n\n# Fix this issues:\n{{ $('Gherkin Validator').item.json.output }}\n\n",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        800,
+        140
+      ],
+      "id": "36803aca-8e5c-4d86-90b8-3aeb95741a0d",
+      "name": "Fix Gherkin"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d283c924-bc1a-4a68-98b7-ae298210c359",
+              "name": "message",
+              "value": "=Retry exhausted",
+              "type": "string"
+            },
+            {
+              "id": "32e27ee4-7f47-4983-97fc-a66b2adea660",
+              "name": "errors",
+              "value": "={{ $('Gherkin Validator').item.json.output}}",
+              "type": "string"
+            },
+            {
+              "id": "ab016d63-a542-406c-be9e-ed85e29f2c82",
+              "name": "gherkin",
+              "value": "={{ $('Gherkin Generator').item.json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        800,
+        -60
+      ],
+      "id": "38682143-711c-4a79-8ced-bfa22e35fdee",
+      "name": "Error Message"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "59d66b1e-09ec-4c95-a4cc-0fb15f104601",
+              "name": "gherkin",
+              "value": "={{ $('Gherkin Generator').item.json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        800,
+        -260
+      ],
+      "id": "4ddd2629-1501-4f26-9ec3-1d5d343e7b4a",
+      "name": "Valid Gherkin"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fcce78ae-61a9-417f-ae66-153170b5544b",
+              "name": "count",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "75c0aa1f-d2e4-484e-b797-09ad11216bc6",
+              "name": "requirements",
+              "value": "={{ $json.chatInput }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -280,
+        -240
+      ],
+      "id": "1e8cf43b-2c9d-48c6-bdbc-0cda68a779a9",
+      "name": "Init"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Init",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Gherkin Generator",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Gherkin Validator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Valid Gherkin",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fix Gherkin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gherkin Validator": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gherkin Generator": {
+      "main": [
+        [
+          {
+            "node": "Gherkin Validator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retries": {
+      "main": [
+        [
+          {
+            "node": "Gherkin Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fix Gherkin": {
+      "main": [
+        [
+          {
+            "node": "Retries",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Init": {
+      "main": [
+        [
+          {
+            "node": "Retries",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "969fc0ae-ec73-47ef-82d1-e7cd4bfda5b0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e8e13ca28292496bb6e988e5705c642203affe74cda520b04aa7144af8b1cf34"
+  },
+  "id": "OkeeLlBKXbrLvHdY",
+  "tags": []
+}
