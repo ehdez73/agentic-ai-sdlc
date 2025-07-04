@@ -1,0 +1,49 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Functional Requirements and Gherkin Scenarios</title><style>.keyword{ color: blue;} .tag{ color: orange;} .comment{ color: green;} .string{ color: red;} .variable{ color: magenta;} pre{ font-family: monospace; white-space: pre-wrap;} </style></head><body><h2>Functional Requirements</h2><ul><li>As a <strong>user</strong>, I want to be able to enter a discount coupon code at the checkout so that I can receive a discount on my order.</li><li>As a <strong>user</strong>, I want to see a clear error message if the coupon is invalid, expired, or does not meet the minimum purchase requirements.</li><li>As a <strong>user</strong>, I want to see the applied discount and the new total reflected in the order summary after successfully applying a coupon.</li><li>As a <strong>user</strong>, I want the discount coupon to be automatically removed if the cart value falls below the minimum required for the coupon.</li><li>As a <strong>user</strong>, I want to be notified if my coupon no longer applies due to changes in my cart, so I understand why the discount has disappeared.</li><li>As a <strong>user</strong>, I want the discount coupon to persist in my session until I manually remove it or the session ends, preventing the need to re-enter it while navigating the site.</li><li>As a <strong>user</strong>, I want to be able to manually remove the coupon through a clear button or icon, so I can easily change my selection.</li><li>As a <strong>user</strong>, I only want to be able to apply one coupon per order to simplify the checkout process.</li></ul><h2>Gherkin Scenarios</h2><pre><code><span class="keyword">Feature:</span> Coupon discount at checkout
+
+  As a user, I want to be able to enter a discount coupon code at the checkout so that I can receive a discount on my order.
+
+  <span class="keyword">Background:</span>
+    <span class="keyword">Given</span> I have items in my cart
+    <span class="keyword">And</span> the cart total is "<span class="variable">${cartTotal}</span>"
+    <span class="keyword">And</span> I have a coupon code "<span class="variable">${couponCode}</span>"
+
+  <span class="tag">@valid</span>
+  <span class="keyword">Scenario Outline:</span> Successfully apply a valid coupon code
+    <span class="keyword">When</span> I enter the coupon code "<span class="variable">${couponCode}</span>"
+    <span class="keyword">Then</span> I should see a success message indicating the coupon has been applied
+    <span class="keyword">And</span> the discount should be "<span class="variable">${discountAmount}</span>"
+    <span class="keyword">And</span> the new total should be "<span class="variable">${newTotal}</span>"
+
+    <span class="keyword">Examples:</span>
+    | couponCode  | discountAmount | cartTotal | newTotal |
+    | SAVE20      | 20             | 100       | 80       |
+    | SPRING30    | 30             | 150       | 120      |
+
+  <span class="tag">@invalid</span>
+  <span class="keyword">Scenario Outline:</span> Attempt to apply an invalid coupon code
+    <span class="keyword">When</span> I enter the coupon code "<span class="variable">${invalidCouponCode}</span>"
+    <span class="keyword">Then</span> I should see an error message indicating the coupon is invalid
+
+    <span class="keyword">Examples:</span>
+    | invalidCouponCode |
+    | INVALIDCODE      |
+    | EXPIREDCODE      |
+
+  <span class="tag">@invalid</span>
+  <span class="keyword">Scenario:</span> Attempt to apply a coupon below minimum cart total
+    <span class="keyword">Given</span> the cart total is "<span class="string">$50</span>"
+    <span class="keyword">When</span> I enter the coupon code "<span class="string">SAVE20</span>"
+    <span class="keyword">Then</span> I should see an error message indicating the minimum purchase requirement has not been met
+
+  <span class="tag">@valid</span>
+  <span class="keyword">Scenario:</span> Cart value drops below minimum for coupon
+    <span class="keyword">Given</span> the cart total is "<span class="string">$30</span>"
+    <span class="keyword">When</span> I add an item that reduces the cart to "<span class="string">$20</span>"
+    <span class="keyword">Then</span> I should be notified that the coupon no longer applies
+
+  <span class="tag">@valid</span>
+  <span class="keyword">Scenario:</span> Manually remove a coupon code
+    <span class="keyword">When</span> I click on the remove button for the coupon
+    <span class="keyword">Then</span> the coupon should be removed
+    <span class="keyword">And</span> the discount should no longer apply
+</code></pre></body></html>

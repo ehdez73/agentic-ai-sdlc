@@ -1,0 +1,179 @@
+{
+  "name": "Gherkin Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.request }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "Act as a quality analyst who is highly experienced in behavioral driven development and developing well-constructed Gherkin Scenarios from supplied requirements. \n\nWhen I supply a list of functional requirements, I want you to create full coverage in the following way:\n\n1. Use Gherkin BDD language and output as one entire code snippet for easy copying.\n2. Provide positive and negative scenarios. \n3. Ensure all common steps you create are added as a Gherkin ‘Background’.\n4. Ensure ‘Background’ is provided only once and is placed after the user story and before the scenarios. \n5. Ensure all variables used are created as a Gherkin ‘Scenario Outline’.\n6. Ensure variables are added to a Gherkin ‘Examples’ table appropriately. \n7. Render example tables preserving alignment with spaces, follow these strict formatting rules:\n   - Use `|` to separate columns. \n   - Ensure column widths are calculated based on the longest content in each column, including the header.\n   - Align all cells to the left by default.\n   - Do not wrap text. Keep each row on a single line.\n   - Add a header row separator (a horizontal line after the header).\n   - Output only the table, without any extra explanation or text.\n8. Include feature level tags and scenario level tags e.g., @valid, @invalid, @feature-example. The tags must be placed before them.\n    For example: \n    ```\n     @valid\n     Scenario: Receive email notification on upgrade \n     ...\n\n     @invalid\n     Scenario: Receive email notification on downgrade\n     ...\n    ```\n9. Provide feature and user story.\n10. Afterwards, suggest an appropriate name for the *.feature file.\n11. Do not assume any output like error messages or variables not part of the requirements.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "47ab5e61-364a-4dad-93b8-5226f50a598a",
+      "name": "Gherkin Generator"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -20,
+        220
+      ],
+      "id": "6164f6d5-a927-4cae-99ce-f41b0d2640eb",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "UlRmosQmzkwVRm3a",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"filename\": \"cupones-de-descuento-en-checkout.feature\",\n\t\"data\": \"Feature: Discount Coupons In Checkout.\\n.....\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        220,
+        220
+      ],
+      "id": "7a9701fc-129c-40cf-995b-71f1f34fb19c",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -540,
+        -20
+      ],
+      "id": "06648a7c-e68f-4f95-8854-12b275e52576",
+      "name": "When chat message received",
+      "webhookId": "27c6509b-1373-4bd0-ad5e-a179c0de554c"
+    },
+    {
+      "parameters": {
+        "inputSource": "jsonExample",
+        "jsonExample": "{\n  \"request\": \"functional requirements\"\n}"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -520,
+        180
+      ],
+      "id": "f29986b1-9b72-4666-8765-5c500a8aa123",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "92a9a073-f70e-43ad-8679-aa5ccc61ed04",
+              "name": "request",
+              "value": "={{ $json.chatInput }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -320,
+        -20
+      ],
+      "id": "60897d68-e5f2-4af4-bab7-84d86a3313dc",
+      "name": "Edit Chat Fields"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Gherkin Generator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Gherkin Generator",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Edit Chat Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Chat Fields": {
+      "main": [
+        [
+          {
+            "node": "Gherkin Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Gherkin Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c8e13b5c-b121-4f40-aaf2-2b5e5aa9a190",
+  "meta": {
+    "instanceId": "e8e13ca28292496bb6e988e5705c642203affe74cda520b04aa7144af8b1cf34"
+  },
+  "id": "VFmvmhU45d9Ez128",
+  "tags": []
+}

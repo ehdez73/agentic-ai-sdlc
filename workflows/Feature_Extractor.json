@@ -1,0 +1,181 @@
+{
+  "name": "Feature Extractor",
+  "nodes": [
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -780,
+        220
+      ],
+      "id": "09bb4bbc-b017-4f4c-83dc-73d14289c024",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "UlRmosQmzkwVRm3a",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.request }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an experienced software requirements analyst, familiar with Agile development ceremonies, specifically the \"3 amigos\" meeting (Developer, QA, Product Owner). Your task is to analyze a transcript of an informal conversation between these three roles, where they are discussing improvements and fixes to an existing software application.\n\nYour main objective is to identify and extract **functional requirements** from the conversation.\n\nHere are the key points to follow:\n\n1. **Focus:** Concentrate exclusively on discussions about **new functionalities** and **solutions to existing issues** in the application. Pay attention to the perspectives of each role (business/user needs, technical feasibility, and quality/test criteria).\n\n2. **Ignore noise:** Skip any personal conversation, jokes, digressions, or topics not directly related to software development.\n\n3. **Output format:** The output must be in plain text. Present each functional requirement using the format \"As a \\[User Role], I want to \\[action/functionality]\". If the user role is not explicitly stated, infer the most appropriate one based on the discussion (e.g., \"As a user, I want to...\", \"As an administrator, I want to...\", etc.).\n\n4. **Level of detail:** Requirements should be at a **medium level** of detail. Provide enough information to understand the functionality without going into technical specifications better suited for Gherkin scenarios. The idea is for them to serve as a clear basis for subsequent Gherkin definition.\n\n5. **Clear list:** Generate a numbered list of functional requirements in English.\n\n6. **Filename**: suggest a filename in kebab-case that describe all the requirements. The filename should not have any extension. For example \"discount-coupons-in-checkout\"\n\n**Example of how to identify and format a requirement:**\n\n* **Transcript:** \"The PO said: 'We need the user to be able to filter the results by date.' The Dev replied: 'Yes, that’s feasible,' and QA added: 'We’d have to test that date ranges work properly.'\"\n* **Requirement:** \"As a **user**, I want to be able to filter the results by date.\"\n\n",
+          "returnIntermediateSteps": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        -740,
+        0
+      ],
+      "id": "23598222-d8cf-4c48-87d1-de0a53d904b6",
+      "name": "Feature extractor",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1280,
+        -40
+      ],
+      "id": "1c944739-d7bd-4c94-b968-3fdce3fe9652",
+      "name": "When chat message received",
+      "webhookId": "27c6509b-1373-4bd0-ad5e-a179c0de554c"
+    },
+    {
+      "parameters": {
+        "inputSource": "jsonExample",
+        "jsonExample": "{\n  \"request\": \"3-amigos conversation\"\n}"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1280,
+        220
+      ],
+      "id": "219fa129-b831-4bda-b107-d79c11be3703",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "92a9a073-f70e-43ad-8679-aa5ccc61ed04",
+              "name": "request",
+              "value": "={{ $json.chatInput }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1060,
+        -40
+      ],
+      "id": "a2a17f50-5878-47d8-95ba-87bc75a4b6ba",
+      "name": "Edit Chat Fields"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"filename\": \"cupones-de-descuento-en-checkout.md\",\n\t\"data\": \"1. As a **user**, I want to be able to enter a discount coupon code at the checkout so that I can apply it to my total order. 2. As a **user**, I want to receive a clear error message if my coupon is invalid, expired, or does not meet the minimum purchase requirements. 3. As a **user**, I want the discount to be automatically removed if my order total falls below the minimum purchase requirement for the coupon. 4. As a **user**, I want to see the discount applied in the order summary as a line item, showing how much was deducted. 5. As a **user**, I want my coupon to persist during my session, so I do not have to re-enter it every time I navigate between pages. 6. As a **user**, I want the option to remove an applied coupon easily, so I can try different coupons without hassle. 7. As a **admin**, I want to manage discount coupons in the admin panel, including creating new coupons and defining conditions such as percentage off and expiration dates.\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        -560,
+        220
+      ],
+      "id": "5018b2b3-34bc-4f6a-95f1-2b58b089c93e",
+      "name": "Structured Output Parser"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Feature extractor",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Edit Chat Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Feature extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Chat Fields": {
+      "main": [
+        [
+          {
+            "node": "Feature extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Feature extractor",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "99caeef7-1350-4ede-b6b5-5aa382e50625",
+  "meta": {
+    "instanceId": "e8e13ca28292496bb6e988e5705c642203affe74cda520b04aa7144af8b1cf34"
+  },
+  "id": "4wSumomhUiLKYUbg",
+  "tags": []
+}

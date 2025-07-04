@@ -1,0 +1,190 @@
+{
+  "name": "Mail Sender",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.request }}",
+        "options": {
+          "systemMessage": "You are a mail assistant. Use the provided tools to send the provided content via email "
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        -340,
+        -20
+      ],
+      "id": "95d4fdb1-a3d3-4ab2-bfc4-e74cdf854a23",
+      "name": "Mail Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -340,
+        120
+      ],
+      "id": "19ad17ac-3689-4167-9f1f-0d5d0b1cba36",
+      "name": "OpenAI Chat Model4",
+      "credentials": {
+        "openAiApi": {
+          "id": "UlRmosQmzkwVRm3a",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "kube.apply@gmail.com",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {
+          "senderName": "Agentic SDLC"
+        }
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        -80,
+        160
+      ],
+      "id": "a5abf45b-a8a1-4268-a875-ab286004a021",
+      "name": "Gmail",
+      "webhookId": "ca071f3a-6149-4747-ba16-e2b220afaa76",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "nz5ZowYCPE2MSTU7",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -920,
+        -60
+      ],
+      "id": "5e9a988c-84f6-4fdb-b76a-253c860142fc",
+      "name": "When chat message received",
+      "webhookId": "27c6509b-1373-4bd0-ad5e-a179c0de554c"
+    },
+    {
+      "parameters": {
+        "inputSource": "jsonExample",
+        "jsonExample": "{\n  \"request\": \"email body\"\n}"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -900,
+        140
+      ],
+      "id": "b0bded60-2508-4fed-8ca4-c30b0d1da7e3",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "92a9a073-f70e-43ad-8679-aa5ccc61ed04",
+              "name": "request",
+              "value": "={{ $json.chatInput }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -700,
+        -60
+      ],
+      "id": "0e0454cf-c8f5-4095-a7d9-f2bf14caa444",
+      "name": "Edit Chat Fields"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Mail Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "Mail Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Edit Chat Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Chat Fields": {
+      "main": [
+        [
+          {
+            "node": "Mail Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Mail Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "f39e5d45-4289-4965-a424-7c2f68f87ad6",
+  "meta": {
+    "instanceId": "e8e13ca28292496bb6e988e5705c642203affe74cda520b04aa7144af8b1cf34"
+  },
+  "id": "43pFtFYCWOM8TRQr",
+  "tags": []
+}

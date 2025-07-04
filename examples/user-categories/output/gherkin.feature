@@ -1,0 +1,50 @@
+Feature: User Category Assignment
+  In order to create targeted marketing campaigns and notify users appropriately
+  As a marketing team member and user
+  I want to ensure users are categorized based on their order history, and notifications are sent accordingly.
+
+  Background:
+    Given a user with completed orders
+    And the user has an email address
+    And the system processes categorization asynchronously
+
+  @valid
+  Scenario Outline: Assigning categories based on completed orders
+    Given the user has <order_count> satisfactory orders
+    When the system classifies the user
+    Then the user should be assigned the <category> category
+
+    Examples:
+    | order_count | category |
+    | 25          | PLATINUM |
+    | 18          | GOLD     |
+    | 12          | SILVER   |
+    | 8           | BRONZE   |
+
+  @invalid
+  Scenario Outline: No action taken when user does not meet category criteria
+    Given the user has <order_count> satisfactory orders
+    When the system classifies the user
+    Then no category assignment should occur
+
+    Examples:
+    | order_count |
+    | 3           |
+
+  @valid
+  Scenario: Notify user on upgrade
+    Given the user has completed orders and is upgraded to a higher category
+    When the system sends an email notification
+    Then the user should receive the notification
+
+  @invalid
+  Scenario: Notify user on downgrade
+    Given the user has ongoing cancellations or insufficient completed orders
+    When the system sends an email notification
+    Then the user should receive the notification about the category downgrade
+
+  @feature-example
+  Scenario: Handle email notification failures
+    Given the user has completed orders
+    When the email notification fails to send
+    Then the system should implement retry policies to resend the emails.

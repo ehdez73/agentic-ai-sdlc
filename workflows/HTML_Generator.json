@@ -1,0 +1,159 @@
+{
+  "name": "HTML Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -540,
+        180
+      ],
+      "id": "9f075de7-7761-494c-afa2-1d208fdc49b2",
+      "name": "OpenAI Chat Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "UlRmosQmzkwVRm3a",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.request }}\n",
+        "options": {
+          "systemMessage": "You are an HTML generator system. Your core function is to transform a list of functional requirements and Gherkin scenarios into a syntax-highlighted HTML.\n\nYour task is to generate two clearly separated sections in HTML:\n\n## Functional Requirements\n\n- Transform a plain list of functional requirements into a well-formatted HTML list.\n- Use nested bullet points or numbered lists where appropriate.\n- Do not modify or expand the original requirements.\n\n## Gherkin Scenarios \n\nGherkin to HTML Conversion & Syntax Highlighting:\n\n- Code Block Formatting: The entire Gherkin scenario must be presented within an HTML <code> or <pre> block to preserve formatting and provide a code-like appearance within the email body.\n- Syntax Highlighting: Apply inline CSS styling to highlight Gherkin keywords and elements using distinct colors.\n- Keywords (Feature:, Scenario:, Scenario Outline:, Background:, Given, When, Then, And, But, Examples:): Use a specific color (e.g., blue or purple).\n- Tags (@tag): Use a specific color (e.g., orange or cyan).\n- Comments (# comment): Use a specific color (e.g., green or grey).\n- Strings/Literals (e.g., quoted text): Use a specific color (e.g., red or brown).\n- Variables (<variable> in Scenario Outline): Use a specific color (e.g., magenta or teal).\n- Plain Text Tables: When Examples: tables are present within a Gherkin scenario, they must not be converted to HTML tables. Instead, render them using plain text formatting, preserving their column-aligned structure within the <code> or <pre> block. Use spaces to ensure columns align.\n- Strict Adherence: You must only convert the provided Gherkin content. Do not add any new information, introductions, conclusions, or stylistic elements not directly derived from the Gherkin text itself, beyond the syntax highlighting and code block encapsulation.\n- Constraint: Your output must be a direct HTML representation of the Gherkin input, formatted as a code block with syntax highlighting for keywords, tags, comments, and variables, and with Examples tables rendered in plain text, ready for email transmission. Do not generate conversational text or ask clarifying questions unless the input is entirely ambiguous regarding the recipient or content.\n\n\n### Additional Instructions:\n\n- The output must be a valid HTML content only.\n- Do not include any explanatory text or headings beyond the two defined sections.\n\nConstraint: Do not introduce or omit any content. Only format and highlight the provided text as specified.\n\n### Output example:\n<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>Functional Requirements and Gherkin Scenarios</title><style>.keyword{ color: blue;} .tag{ color: orange;} .comment{ color: green;} .string{ color: red;} .variable{ color: magenta;} pre{ font-family: monospace; white-space: pre-wrap;} </style></head><body><h2>Functional Requirements</h2><ul><li>As a user, I want to enter a coupon code at the checkout page so that I can apply discounts to my order total.</li><li>As a user, I want to see a clear message if a coupon code is invalid, expired, or does not meet purchase conditions, so that I understand why the coupon cannot be applied.</li></ul><h2>Gherkin Scenarios</h2><pre><code>@feature-discount-coupons<span class=\"keyword\">Feature:</span>Discount Coupons in Checkout As a user, I want to enter a coupon code at the checkout page so that I can apply discounts to my order total. <span class=\"keyword\">Background:</span><span class=\"keyword\">Given</span>I am on the checkout page <span class=\"keyword\">And</span>I have a cart with products <span class=\"tag\">@valid</span><span class=\"keyword\">Scenario:</span>Removing a valid coupon code <span class=\"keyword\">Given</span>I have applied the coupon code \"<span class=\"string\">VALIDCOUPON1</span>\" <span class=\"keyword\">When</span>I remove the coupon code <span class=\"keyword\">Then</span>I should see the original amount returned as \"<span class=\"string\">100</span>\" <span class=\"keyword\">And</span>I should see a message \"<span class=\"string\">Coupon removed</span>\"</code></pre></body></html>"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        -540,
+        -20
+      ],
+      "id": "c693b9bb-811d-4405-b248-f1809e002102",
+      "name": "HTML Documentation"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -980,
+        -20
+      ],
+      "id": "839dc247-71c0-4c00-adf8-9994685c8c92",
+      "name": "When chat message received",
+      "webhookId": "27c6509b-1373-4bd0-ad5e-a179c0de554c"
+    },
+    {
+      "parameters": {
+        "inputSource": "jsonExample",
+        "jsonExample": "{\n  \"request\": \"Functional requirements and gherkin scenearios\"\n}"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -980,
+        200
+      ],
+      "id": "6c527103-4d6c-4fad-9fb8-e4b716abf518",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "92a9a073-f70e-43ad-8679-aa5ccc61ed04",
+              "name": "request",
+              "value": "={{ $json.chatInput }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -780,
+        -20
+      ],
+      "id": "a8730b5f-4453-4040-b745-1741427ee65f",
+      "name": "Edit Chat Fields"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "HTML Documentation",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML Documentation": {
+      "main": [
+        []
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Edit Chat Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Chat Fields": {
+      "main": [
+        [
+          {
+            "node": "HTML Documentation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "HTML Documentation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "52cc7011-d48d-4b5b-bfe0-9ca1fcb67bfb",
+  "meta": {
+    "instanceId": "e8e13ca28292496bb6e988e5705c642203affe74cda520b04aa7144af8b1cf34"
+  },
+  "id": "iu0pktHvlnotsTzS",
+  "tags": []
+}

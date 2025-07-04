@@ -1,0 +1,64 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Functional Requirements and Gherkin Scenarios</title><style>.keyword{ color: blue;} .tag{ color: orange;} .comment{ color: green;} .string{ color: red;} .variable{ color: magenta;} pre{ font-family: monospace; white-space: pre-wrap;} </style></head><body><h2>Functional Requirements</h2><ul><li>As a <strong>user</strong>, I want to be assigned a category (PLATINUM, GOLD, SILVER, BRONZE) based on the number of completed orders I have made in the last year.</li><li>As a <strong>marketing team member</strong>, I want to segment users into categories so that we can create targeted marketing campaigns that increase sales.</li><li>As a <strong>system administrator</strong>, I want the system to classify users based on the following rules:
+<ul>
+<li>PLATINUM for 20+ satisfactory orders</li>
+<li>GOLD for 15-20 satisfactory orders</li>
+<li>SILVER for 10-15 satisfactory orders</li>
+<li>BRONZE for 5-10 satisfactory orders</li>
+</ul>
+</li><li>As a <strong>user</strong>, I want to receive an email notification when I have been upgraded to a higher category based on my order history.</li><li>As a <strong>user</strong>, I want to be notified via email if my category is downgraded due to an order being canceled or insufficient completed orders.</li><li>As a <strong>system</strong>, I want to ensure that categorization processing is asynchronous so that it does not affect the normal purchasing flow.</li><li>As a <strong>system</strong>, I want to implement retry policies for email notifications to handle potential failures in sending out messages.</li><li>As a <strong>QA</strong>, I want to validate that if a user does not meet any category criteria, no action is taken regarding categorization.</li></ul><h2>Gherkin Scenarios</h2><pre><code><span class="keyword">Feature:</span> User Category Assignment
+In order to create targeted marketing campaigns and notify users appropriately
+As a marketing team member and user
+I want to ensure users are categorized based on their order history, and notifications are sent accordingly.
+
+
+<span class="keyword">Background:</span>
+<span class="keyword">Given</span> a user with completed orders
+<span class="keyword">And</span> the user has an email address
+<span class="keyword">And</span> the system processes categorization asynchronously
+
+
+<span class="tag">@valid</span>
+<span class="keyword">Scenario Outline:</span> Assigning categories based on completed orders
+<span class="keyword">Given</span> the user has <span class="variable"><order_count></span> satisfactory orders
+<span class="keyword">When</span> the system classifies the user
+<span class="keyword">Then</span> the user should be assigned the <span class="variable"><category></span> category
+
+
+<span class="keyword">Examples:</span>
+| order_count | category |
+| 25          | PLATINUM |
+| 18          | GOLD     |
+| 12          | SILVER   |
+| 8           | BRONZE   |
+
+<span class="tag">@invalid</span>
+<span class="keyword">Scenario Outline:</span> No action taken when user does not meet category criteria
+<span class="keyword">Given</span> the user has <span class="variable"><order_count></span> satisfactory orders
+<span class="keyword">When</span> the system classifies the user
+<span class="keyword">Then</span> no category assignment should occur
+
+
+<span class="keyword">Examples:</span>
+| order_count |
+| 3           |
+
+<span class="tag">@valid</span>
+<span class="keyword">Scenario:</span> Notify user on upgrade
+<span class="keyword">Given</span> the user has completed orders and is upgraded to a higher category
+<span class="keyword">When</span> the system sends an email notification
+<span class="keyword">Then</span> the user should receive the notification
+
+
+<span class="tag">@invalid</span>
+<span class="keyword">Scenario:</span> Notify user on downgrade
+<span class="keyword">Given</span> the user has ongoing cancellations or insufficient completed orders
+<span class="keyword">When</span> the system sends an email notification
+<span class="keyword">Then</span> the user should receive the notification about the category downgrade
+
+
+<span class="tag">@feature-example</span>
+<span class="keyword">Scenario:</span> Handle email notification failures
+<span class="keyword">Given</span> the user has completed orders
+<span class="keyword">When</span> the email notification fails to send
+<span class="keyword">Then</span> the system should implement retry policies to resend the emails.</code></pre></body></html>
+
